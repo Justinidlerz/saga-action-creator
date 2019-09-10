@@ -1,38 +1,45 @@
-import { ReducersMapObject, AnyAction, Reducer } from 'redux';
+import { ReducersMapObject, AnyAction } from 'redux';
 import { takeEvery, ForkEffect, call } from 'redux-saga/effects';
-import { IEffect, IEffectRecordWithModule, ISagaActionsRecord, ITakeType } from '../typings/handle';
+import {
+  IEffect,
+  IEffectRecordWithModule,
+  IActionsRecord,
+  ITakeType,
+  ICreatorRecord,
+  IEffectRecord,
+} from '../typings/handle';
 import { IPlugin } from '../typings/plugins';
 
-export interface Options<S extends ISagaActionsRecord> {
+export interface Options<A extends IActionsRecord<A>, P extends IPlugin<A>> {
   // plugin list
-  plugins?: IPlugin<S>[];
+  plugins?: P[];
   // default is takeEvery
   defaultTakeType?: ITakeType;
-  creators: S;
+  creators: ICreatorRecord<A>;
 }
 
-export type Reducers<S extends ISagaActionsRecord, P extends IPlugin<S> = any> = {
-  [T in P['name']]: P['getReducer'] extends (...args: any[]) => infer R ? R : any;
-}
+export type State<A extends IActionsRecord<A>, P extends IPlugin<A>> = {
+  [T in P['name']]: string;
+};
 
-class CreatorConnection<S extends ISagaActionsRecord, P extends Reducers<S> = any> {
+// S should be a creator actions record
+// P should be a plugins reducer record
+class CreatorConnection<A extends IActionsRecord<A>, S extends State<A, P>, P extends IPlugin<A> = any> {
   private readonly takeType: ITakeType = takeEvery;
-  private readonly combinedPluginReducers: ReducersMapObject<P>;
-  private readonly plugins: IPlugin<S>[] = [];
+  private readonly combinedPluginReducers: ReducersMapObject<S>;
+  private readonly plugins: P[];
   private readonly wrappedEffects: ForkEffect[] = [];
 
-  constructor(options: Options<S>) {
+  constructor(options: Options<A, P>) {
     if (options.defaultTakeType) {
       this.takeType = options.defaultTakeType;
     }
-    if (options.plugins) {
-      this.plugins = options.plugins;
-    }
+    this.plugins = options.plugins || [];
     this.combinedPluginReducers = this.combinePluginReducers(options.plugins || [], options.creators);
     this.wrappedEffects = this.wrapEffects(options.creators);
   }
 
-  public getReducers(): ReducersMapObject<P> {
+  public getReducers(): ReducersMapObject<S> {
     return this.combinedPluginReducers;
   }
 
@@ -40,12 +47,12 @@ class CreatorConnection<S extends ISagaActionsRecord, P extends Reducers<S> = an
     return this.wrappedEffects;
   }
 
-  private wrapEffects(creatorRecord: S): ForkEffect[] {
+  private wrapEffects(creatorRecord: ICreatorRecord<A>): ForkEffect[] {
     const effects: ForkEffect[] = [];
     for (const key of Object.keys(creatorRecord)) {
-      const creator = creatorRecord[key];
+      const creator = creatorRecord[key as keyof ICreatorRecord<A>];
       const records = creator.getRecord();
-      for (const record of Object.values(records)) {
+      for (const record of Object.values<IEffectRecord>(records)) {
         const take = record.takeType || this.takeType;
         effects.push(
           take(record.actionKey, this.getSagaWrapper(record.effect, Object.assign({}, record, { moduleName: key }))),
@@ -71,7 +78,7 @@ class CreatorConnection<S extends ISagaActionsRecord, P extends Reducers<S> = an
     }
   }
 
-  private combinePluginReducers(plugins: IPlugin<S>[], creators: S): ReducersMapObject<P> {
+  private combinePluginReducers(plugins: IPlugin<A>[], creators: ICreatorRecord<A>): ReducersMapObject<S> {
     return plugins.reduce((prev, plugin) => {
       if (plugin.getReducer) {
         return {

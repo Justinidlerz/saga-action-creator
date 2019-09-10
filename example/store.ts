@@ -24,10 +24,12 @@ store.subscribe(() => {
   console.log(store.getState());
 });
 
-sagaMiddleware.run(function *() {
+sagaMiddleware.run(function*() {
   yield all(creator.getEffects());
 });
 
-store.dispatch(userSagaAction.actions.getUsers({
-  userName: '123',
-}));
+store.dispatch(
+  userSagaAction.actions.getUsers({
+    id: 123,
+  }),
+);

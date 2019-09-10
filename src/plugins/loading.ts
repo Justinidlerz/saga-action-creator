@@ -2,49 +2,48 @@ import { cloneDeep } from 'lodash';
 import { put } from 'redux-saga/effects';
 import { Action } from 'redux';
 import { IPlugin } from '../typings/plugins';
-import { IEffectRecordWithModule, ISagaActionsRecord } from '../typings/handle';
+import { IEffectRecordWithModule, IActionsRecord, ICreatorRecord, IActions } from '../typings/handle';
 import SagaActionCreator from '../lib/SagaActionCreator';
 
 const START_LOADING = 'START_LOADING';
 const END_LOADING = 'END_LOADING';
 
-interface LoadingAction<T extends ISagaActionsRecord, K extends keyof T = keyof T> extends Action {
-  actionName: keyof (T[K]['actions']);
-  moduleName: K;
+interface LoadingAction<T extends IActionsRecord<T>> extends Action {
+  actionName: keyof (keyof SagaActionCreator<IActions<T>>['actions']);
+  moduleName: keyof T;
 }
 
-type ModuleActions<K extends SagaActionCreator> = {
-  [S in keyof K['actions']]: boolean;
+type ModuleActions<A> = {
+  [S in keyof SagaActionCreator<IActions<A>>['actions']]: boolean;
 };
 
-type LoadingModule<T extends ISagaActionsRecord> = {
-  [K in keyof T]: ModuleActions<T[K]>;
+type LoadingModule<S extends IActionsRecord<S>> = {
+  [K in keyof S]: ModuleActions<S[K]>;
 };
 
-type LoadingModuleWithGlobal<T extends ISagaActionsRecord> = LoadingModule<T> & {
+type LoadingModuleWithGlobal<T extends IActionsRecord<T>> = LoadingModule<T> & {
   global: boolean;
 };
 
-const getLoadingPlugin = <Modules extends ISagaActionsRecord>(pluginName: string = 'loading') => {
-  const loadingPlugin: IPlugin<Modules, LoadingModuleWithGlobal<Modules>, LoadingAction<Modules>> = {
+const getLoadingPlugin = <Modules extends IActionsRecord<Modules>>(
+  pluginName: string = 'loading',
+): IPlugin<Modules, LoadingModuleWithGlobal<Modules>, LoadingAction<Modules>> => {
+  return {
     name: pluginName,
-    getReducer(modules: Modules) {
+    getReducer(modules: ICreatorRecord<Modules>) {
       // map initial states
       const actions = Object.keys(modules).reduce((object, moduleName) => {
-        const module = modules[moduleName];
-        if (module) {
-          const actions = Object.keys(module.actions).reduce((prev, actionName) => {
-            return {
-              [actionName]: false,
-              ...prev,
-            };
-          }, {});
+        const module = modules[moduleName as keyof ICreatorRecord<Modules>];
+        const actions = Object.keys(module.actions).reduce((prev, actionName) => {
           return {
-            [moduleName]: actions,
-            ...object,
+            [actionName]: false,
+            ...prev,
           };
-        }
-        return object;
+        }, {});
+        return {
+          [moduleName]: actions,
+          ...object,
+        };
       }, {});
 
       const initState = {
@@ -52,7 +51,7 @@ const getLoadingPlugin = <Modules extends ISagaActionsRecord>(pluginName: string
         ...actions,
       } as LoadingModuleWithGlobal<Modules>;
 
-      return (state = initState, action: LoadingAction<Modules>) => {
+      return (state = initState, action: LoadingAction<Modules>): LoadingModuleWithGlobal<Modules> => {
         let newState: LoadingModuleWithGlobal<Modules>;
         switch (action.type) {
           case START_LOADING:
@@ -64,7 +63,12 @@ const getLoadingPlugin = <Modules extends ISagaActionsRecord>(pluginName: string
             newState = cloneDeep(state);
             newState[action.moduleName][action.actionName] = false as any;
             newState.global = Object.keys(newState).reduce((prev, key) => {
-              if (key !== 'global' && Object.values(newState[key]).some(isLoading => isLoading === true)) {
+              if (
+                key !== 'global' &&
+                Object.values(newState[key as keyof LoadingModuleWithGlobal<Modules>]).some(
+                  isLoading => isLoading === true,
+                )
+              ) {
                 return true;
               }
               return prev;
@@ -89,8 +93,6 @@ const getLoadingPlugin = <Modules extends ISagaActionsRecord>(pluginName: string
       });
     },
   };
-
-  return loadingPlugin;
 };
 
 export default getLoadingPlugin;

@@ -1,13 +1,14 @@
 import SagaActionCreator from './lib/SagaActionCreator';
-import { ICustomEffectActions, ISagaActionsRecord, ISagaRecord } from './typings/handle';
-import CreatorConnection, { Options, Reducers } from './lib/CreatorConnection';
+import { IActions, IActionsRecord, ISagaRecord } from './typings/handle';
+import CreatorConnection, { Options, State } from './lib/CreatorConnection';
 import getLoadingPlugin from './plugins/loading';
+import { IPlugin } from './typings/plugins';
 
-const createSagaActions = <S extends ICustomEffectActions<S> = any>(definition: ISagaRecord<S>) =>
+const createSagaActions = <S extends IActions<S>>(definition: ISagaRecord<S>) =>
   new SagaActionCreator<S>(definition);
 
-const createConnection = <S extends ISagaActionsRecord = any, P extends Reducers<S> = any>(options: Options<S>) =>
-  new CreatorConnection<S, P>(options);
+const createConnection = <A extends IActionsRecord<A>, S extends State<A, P>, P extends IPlugin<A> = any>(options: Options<A, P>) =>
+  new CreatorConnection<A, S, P>(options);
 
 export { createConnection, getLoadingPlugin };
 export default createSagaActions;

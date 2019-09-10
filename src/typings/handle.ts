@@ -1,5 +1,5 @@
 import { ForkEffect } from 'redux-saga/effects';
-import { AnyAction, ActionCreator } from 'redux';
+import { ActionCreator, AnyAction } from 'redux';
 import SagaActionCreator from '../lib/sagaActionCreator';
 
 export type ITakeType = (...args: any[]) => ForkEffect;
@@ -14,12 +14,37 @@ export type ISagaHandleItem = IEffect | IHandleItem;
 
 export type ISagaRecord<Name> = {
   [T in keyof Name]: ISagaHandleItem;
-}
+};
 
-type ICustomActionCreator<P> = (payload?: P) => AnyAction;
+type IActionCreator<P> = ActionCreator<AnyAction>;
 
-export type ICustomEffectActions<E> = {
-  [K in keyof E]: ICustomActionCreator<E[K]>
+/**
+ * like so:
+ * interface User {
+ *   getUser: (payload: any) => AnyAction;
+ *   test: (payload: any) => AnyAction;
+ * }
+ */
+export type IActions<A> = {
+  [K in keyof A]: IActionCreator<A[K]>;
+};
+
+/**
+ * like so:
+ * interface Actions {
+ *   user: User
+ * }
+ */
+export type IActionsRecord<A> = {
+  [K in keyof A]: IActions<A[K]>;
+};
+/**
+ * interface Creators {
+ *   user: SagaActionCreator
+ * }
+ */
+export type ICreatorRecord<S extends IActionsRecord<S>> = {
+  [K in keyof S]: SagaActionCreator<S[K]>;
 };
 
 export interface IEffectRecord {
@@ -29,10 +54,8 @@ export interface IEffectRecord {
   effect: IEffect;
 }
 
-export type IEffectsRecord<S> = Record<keyof S, IEffectRecord>
+export type IEffectsRecord<S> = Record<keyof S, IEffectRecord>;
 
 export interface IEffectRecordWithModule extends IEffectRecord {
   moduleName: string;
 }
-
-export type ISagaActionsRecord = Record<string, SagaActionCreator>;
