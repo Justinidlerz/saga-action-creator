@@ -1,9 +1,14 @@
 # Saga action creator
+[![npm version](https://badge.fury.io/js/saga-action-creator.svg)](https://badge.fury.io/js/saga-action-creator)
+[![codecov](https://codecov.io/gh/Justinidlerz/saga-action-creator/branch/master/graph/badge.svg)](https://codecov.io/gh/Justinidlerz/saga-action-creator)
+[![Build Status](https://travis-ci.org/codecov/example-typescript.svg?branch=master)](https://travis-ci.org/gh/Justinidlerz/saga-action-creator)
+[![TypeScript](https://img.shields.io/badge/%3C/%3E-TypeScript-0072C4.svg)](https://www.typescriptlang.org/)
+[![Tested with Jest](https://img.shields.io/badge/tested_with-Jest-99424f.svg)](https://github.com/facebook/jest)
+[![MIT License](https://img.shields.io/npm/l/generator-bxd-oss.svg)](#License)
 
 # Usage
-
-## Create saga actions
-### Define the sagas
+### Create saga actions
+- Define the sagas
 ```typescript
 import createSagaActions from 'saga-action-creator';
 import { takeLatest } from 'redux-saga/effects';
@@ -25,7 +30,7 @@ const user = createSagaActions({
 
 export default user;
 ```
-### Connect sagaActions and use the plugin
+- Connect sagaActions and use the plugin
 ```typescript
 import { createConnection, getLoadingPlugin } from 'saga-action-creator';
 import user from './sagaActions/user';
@@ -60,7 +65,7 @@ const store = createStore(reducers, {}, applyMiddleware(sagaMiddleware));
 export default store;
 ```
 
-### Use the actions
+- Use the actions
 ```typescript
 import { connect } from 'react-redux';
 import userActions from '../sagaActions/user';
