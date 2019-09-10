@@ -33,11 +33,10 @@ export default user;
 - Connect sagaActions and use the plugin
 ```typescript
 import { createConnection, getLoadingPlugin } from 'saga-action-creator';
-import user from './sagaActions/user';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { all, takeEvery } from 'redux-saga/effects';
 import createSagaMiddleware from 'redux-saga';
-import { all } from 'redux-saga/effects';
-import { takeEvery } from 'redux-saga/effects';
+import user from './sagaActions/user';
 
 // combine creators an use plugin
 const creator = createConnection({
@@ -46,7 +45,10 @@ const creator = createConnection({
   },
   // you can change the default take type here, by default is `takeEvery`
   defaultTakeType: takeEvery,
-  plugins: [getLoadingPlugin()],
+  plugins: {
+    // the plugin name will be map to reducer key
+    loading: getLoadingPlugin(),  
+  },
 });
 
 // connect to store
