@@ -1,15 +1,17 @@
 import '@babel/polyfill';
-import { createConnection, getLoadingPlugin } from '../build';
-import userSagaAction from './sagaActions/user';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import { all } from 'redux-saga/effects';
+import { createConnection, getLoadingPlugin } from '../build';
+import userSagaAction from './sagaActions/user';
 
 const creator = createConnection({
   creators: {
     user: userSagaAction,
   },
-  plugins: [getLoadingPlugin()],
+  plugins: {
+    loading: getLoadingPlugin(),
+  },
 });
 
 const reducers = combineReducers({
@@ -21,7 +23,7 @@ const sagaMiddleware = createSagaMiddleware();
 const store = createStore(reducers, {}, applyMiddleware(sagaMiddleware));
 
 store.subscribe(() => {
-  console.log(store.getState());
+  console.log(store.getState().loading.user.getUsers);
 });
 
 sagaMiddleware.run(function*() {

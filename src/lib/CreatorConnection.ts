@@ -7,39 +7,32 @@ import {
   ITakeType,
   ICreatorRecord,
   IEffectRecord,
+  IReducers,
 } from '../typings/handle';
-import { IPlugin } from '../typings/plugins';
+import { IPlugin, IPlugins } from '../typings/plugins';
 
-export interface Options<A extends IActionsRecord<A>, P extends IPlugin<A>> {
+export interface Options<A extends IActionsRecord<A>, R> {
   // plugin list
-  plugins?: P[];
+  plugins?: IPlugins<A, R>;
   // default is takeEvery
   defaultTakeType?: ITakeType;
   creators: ICreatorRecord<A>;
 }
 
-export type State<A extends IActionsRecord<A>, P extends IPlugin<A>> = {
-  [T in P['name']]: string;
-};
-
-// S should be a creator actions record
-// P should be a plugins reducer record
-class CreatorConnection<A extends IActionsRecord<A>, S extends State<A, P>, P extends IPlugin<A> = any> {
-  private readonly takeType: ITakeType = takeEvery;
-  private readonly combinedPluginReducers: ReducersMapObject<S>;
-  private readonly plugins: P[];
+class CreatorConnection<A extends IActionsRecord<A>, R = any> {
+  private readonly takeType: ITakeType;
+  private readonly combinedPluginReducers: ReducersMapObject<IReducers<A, R>>;
+  private readonly plugins: IPlugin<A, R>[];
   private readonly wrappedEffects: ForkEffect[] = [];
 
-  constructor(options: Options<A, P>) {
-    if (options.defaultTakeType) {
-      this.takeType = options.defaultTakeType;
-    }
-    this.plugins = options.plugins || [];
-    this.combinedPluginReducers = this.combinePluginReducers(options.plugins || [], options.creators);
+  constructor(options: Options<A, R>) {
+    this.takeType = options.defaultTakeType = takeEvery;
+    this.plugins = Object.values(options.plugins || {});
+    this.combinedPluginReducers = this.combinePluginReducers(options.plugins, options.creators);
     this.wrappedEffects = this.wrapEffects(options.creators);
   }
 
-  public getReducers(): ReducersMapObject<S> {
+  public getReducers(): ReducersMapObject<IReducers<A, R>> {
     return this.combinedPluginReducers;
   }
 
@@ -78,11 +71,18 @@ class CreatorConnection<A extends IActionsRecord<A>, S extends State<A, P>, P ex
     }
   }
 
-  private combinePluginReducers(plugins: IPlugin<A>[], creators: ICreatorRecord<A>): ReducersMapObject<S> {
-    return plugins.reduce((prev, plugin) => {
+  private combinePluginReducers(
+    plugins: IPlugins<A, R> | undefined,
+    creators: ICreatorRecord<A>,
+  ): ReducersMapObject<IReducers<A, R>> {
+    if (!plugins) {
+      return {} as any;
+    }
+    return Object.keys(plugins).reduce((prev, key) => {
+      const plugin = plugins[key as keyof IPlugins<A, R>];
       if (plugin.getReducer) {
         return {
-          [plugin.name]: plugin.getReducer(creators),
+          [key]: plugin.getReducer(creators),
           ...prev,
         };
       }
