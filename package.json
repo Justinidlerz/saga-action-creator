@@ -2,10 +2,13 @@
   "name": "saga-action-creator",
   "version": "0.2.0-0",
   "description": "A toolkit to auto generate actions for the redux-saga.",
+  "repository": "https://github.com/Justinidlerz/saga-action-creator",
+  "bugs": "https://github.com/Justinidlerz/saga-action-creator/issues",
   "main": "build/index.js",
   "scripts": {
     "test": "jest",
     "build": "rollup -c",
+    "prepublishOnly": "npm run build",
     "server": "parcel serve example/index.html",
     "watch:rollup": "rollup -cw",
     "start": "npm-run-all -p watch:rollup server"
