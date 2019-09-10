@@ -1,0 +1,21 @@
+/example
+/tests
+# /lib
+# !./lib/postinstall.js
+.cache
+.idea
+.rpt2_cache
+/coverage
+/dist
+/src
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.editorconfig
+jest.config.js
+rollup.config.js
+tsconfig.json
+tslint.json
