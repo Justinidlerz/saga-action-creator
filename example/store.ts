@@ -4,11 +4,8 @@ import userSagaAction from './sagaActions/user';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import { all } from 'redux-saga/effects';
-const creators = {
-    user: userSagaAction,
-  };
 
-const creator = createConnection<typeof creators>({
+const creator = createConnection({
   creators: {
     user: userSagaAction,
   },

@@ -1,7 +1,7 @@
 import { takeLatest } from 'redux-saga/effects';
-import createSagaAction from '../../build';
+import createSagaActions from '../../build';
 
-const user = createSagaAction({
+const user = createSagaActions({
   test: {
     takeType: takeLatest,
     *effect(payload): Iterator<any> {
