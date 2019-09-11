@@ -5,6 +5,7 @@
   "repository": "https://github.com/Justinidlerz/saga-action-creator",
   "bugs": "https://github.com/Justinidlerz/saga-action-creator/issues",
   "main": "build/index.js",
+  "typings": "build/index.d.ts",
   "scripts": {
     "test": "jest",
     "build": "rollup -c",
