@@ -19,7 +19,7 @@ export interface Options<A extends IActionsRecord<A>, R> {
   creators: ICreatorRecord<A>;
 }
 
-class CreatorConnection<A extends IActionsRecord<A>, R = any> {
+class CreatorConnection<A extends IActionsRecord<A>, R> {
   private readonly takeType: ITakeType;
   private readonly combinedPluginReducers: ReducersMapObject<IReducers<A, R>>;
   private readonly plugins: IPlugin<A, R>[];

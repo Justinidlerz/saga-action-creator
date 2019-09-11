@@ -23,7 +23,7 @@ const sagaMiddleware = createSagaMiddleware();
 const store = createStore(reducers, {}, applyMiddleware(sagaMiddleware));
 
 store.subscribe(() => {
-  console.log(store.getState().loading.user.getUsers);
+  console.log(store.getState().loading.global);
 });
 
 sagaMiddleware.run(function*() {

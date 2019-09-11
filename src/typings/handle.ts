@@ -45,8 +45,8 @@ export type IActionsRecord<A> = {
  *   user: SagaActionCreator
  * }
  */
-export type ICreatorRecord<S extends IActionsRecord<S>> = {
-  [K in keyof S]: SagaActionCreator<S[K]>;
+export type ICreatorRecord<A extends IActionsRecord<A>> = {
+  [K in keyof A]: SagaActionCreator<A[K]>;
 };
 
 export interface IEffectRecord {
@@ -62,7 +62,7 @@ export interface IEffectRecordWithModule extends IEffectRecord {
   moduleName: string;
 }
 
-type ReturnUndefinedType<T extends ((...args: any) => any) | undefined> = T extends (...args: any) => infer R ? R : any;
+type ReturnUndefinedType<T extends ((...args: any) => any) | undefined> = T extends (...args: any) => infer R ? R : never;
 
 export type IReducers<A extends IActionsRecord<A>, S> = {
   [T in keyof IPlugins<A, S>]: ReturnType<ReturnUndefinedType<IPlugins<A, S>[T]['getReducer']>>;

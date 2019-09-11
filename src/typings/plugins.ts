@@ -4,7 +4,7 @@ import { IActionsRecord, ICreatorRecord, IEffectRecordWithModule } from './handl
 type IHooksEffect = (record: IEffectRecordWithModule)  => Iterator<any>;
 
 export interface IPlugin<AR extends IActionsRecord<AR>, State, A extends Action = AnyAction> {
-  getReducer?: (modules: ICreatorRecord<AR>) => Reducer<State, A>;
+  getReducer?: (creators: ICreatorRecord<AR>) => Reducer<State, A>;
   beforeEffect?: IHooksEffect;
   afterEffect?: IHooksEffect;
 }
