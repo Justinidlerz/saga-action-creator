@@ -104,13 +104,13 @@ export default connect(
 
 ```typescript
 import createSagaActions from 'saga-action-creator';
-import UserList from './UserList';
+import user from './sagaActions/user';
 import { take, call } from 'redux-saga/effects';
 import orderServices from '../serivces/order';
 
 function* waitForUser() {
   while (true) {
-    return yield take(UserList.constants.getUserInfo);
+    return yield take(user.constants.getUserInfo);
   }
 }
 
