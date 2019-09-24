@@ -1,5 +1,5 @@
 import { ForkEffect } from 'redux-saga/effects';
-import { ActionCreator, AnyAction } from 'redux';
+import { Action, ActionCreator, AnyAction } from 'redux';
 import SagaActionCreator from '../lib/sagaActionCreator';
 import { IPlugins } from './plugins';
 
@@ -40,6 +40,8 @@ export type IActionsRecord<A> = {
   [K in keyof A]: IActions<A[K]>;
 };
 
+export type IConstantsRecord<A> = Record<keyof A, string>;
+
 /**
  * interface Creators {
  *   user: SagaActionCreator
@@ -67,3 +69,7 @@ type ReturnUndefinedType<T extends ((...args: any) => any) | undefined> = T exte
 export type IReducers<A extends IActionsRecord<A>, S> = {
   [T in keyof IPlugins<A, S>]: ReturnType<ReturnUndefinedType<IPlugins<A, S>[T]['getReducer']>>;
 };
+
+export type IPayloadAction<Payload> = Action & {
+  payload?: Payload
+}
