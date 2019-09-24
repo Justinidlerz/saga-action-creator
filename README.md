@@ -1,4 +1,5 @@
 # Saga action creator
+
 [![npm version](https://badge.fury.io/js/saga-action-creator.svg)](https://badge.fury.io/js/saga-action-creator)
 [![codecov](https://codecov.io/gh/Justinidlerz/saga-action-creator/branch/master/graph/badge.svg)](https://codecov.io/gh/Justinidlerz/saga-action-creator)
 [![Build Status](https://travis-ci.org/codecov/example-typescript.svg?branch=master)](https://travis-ci.org/gh/Justinidlerz/saga-action-creator)
@@ -7,11 +8,15 @@
 [![MIT License](https://img.shields.io/npm/l/generator-bxd-oss.svg)](#License)
 
 # Usage
+
 ### Create saga actions
+
 - Define the sagas
+
 ```typescript
 import createSagaActions from 'saga-action-creator';
-import { takeLatest } from 'redux-saga/effects';
+import { takeLatest, call } from 'redux-saga/effects';
+import userServices from '../services/user';
 
 const user = createSagaActions({
   // If you need to change the effect take type
@@ -19,18 +24,23 @@ const user = createSagaActions({
   test: {
     takeType: takeLatest,
     *effect(payload): Iterator<any> {
-      yield console.log(payload)
-    }
+      yield console.log(payload);
+    },
+  },
+  *getUserInfo(): Iterator<any> {
+    return yield call(userServices.getUserInfo);
   },
   // by default, you can pass the generator function for the action
   *getUsers(payload): Iterator<any> {
-    yield console.log(payload)
-  }
+    yield console.log(payload);
+  },
 });
 
 export default user;
 ```
+
 - Connect sagaActions and use the plugin
+
 ```typescript
 import { createConnection, getLoadingPlugin } from 'saga-action-creator';
 import { createStore, combineReducers, applyMiddleware } from 'redux';
@@ -47,7 +57,7 @@ const creator = createConnection({
   defaultTakeType: takeEvery,
   plugins: {
     // the plugin name will be map to reducer key
-    loading: getLoadingPlugin(),  
+    loading: getLoadingPlugin(),
   },
 });
 
@@ -58,7 +68,7 @@ const reducers = combineReducers({
 
 const sagaMiddleware = createSagaMiddleware();
 // connect to saga
-sagaMiddleware.run(function *() {
+sagaMiddleware.run(function*() {
   yield all(creator.getEffects());
 });
 
@@ -67,24 +77,55 @@ const store = createStore(reducers, {}, applyMiddleware(sagaMiddleware));
 export default store;
 ```
 
-- Use the actions
+- Use created actions
+
 ```typescript
 import { connect } from 'react-redux';
 import userActions from '../sagaActions/user';
 import UserList from './UserList';
 
-const mapStateToProps = (state) => ({
-  loading: state.loading.user.getUsers
+const mapStateToProps = state => ({
+  loading: state.loading.user.getUsers,
 });
 
 const mapDispatchToProps = {
-    getUsers: userActions.actions.getUsers,
+  getUsers: userActions.actions.getUsers,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(UserList)
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(UserList);
+```
+
+- Use constants
+  > If you need to take to wait for another effect you can use it.  
+  > Don't use to create actions.
+
+```typescript
+import createSagaActions from 'saga-action-creator';
+import UserList from './UserList';
+import { take, call } from 'redux-saga/effects';
+import orderServices from '../serivces/order';
+
+function* waitForUser() {
+  while (true) {
+    return yield take(UserList.constants.getUserInfo);
+  }
+}
+
+const order = createSagaActions({
+  *getOrders(): Iterator<any> {
+    const user = yield call(waitForUser);
+    yield call(orderServices.getOrders);
+  },
+});
+
+export default order;
 ```
 
 # Development
+
 ```javascript
 npm start                                             # Develop
 npm run test                                          # Test
@@ -92,12 +133,14 @@ npm publish                                           # Deploy
 ```
 
 # TODOs
-- [ ] Typescript generic types for plugins export reducer   
+
+- [ ] Typescript generic types for plugins export reducer
 - [ ] Plugin docs
 - [ ] Code remarks
 - [ ] Unit tests
 
 ## License
+
 For a detailed explanation on how things work,
 checkout the [rollup doc](https://https://rollupjs.org/guide/en) and [parcel](https://parceljs.org/)
 
