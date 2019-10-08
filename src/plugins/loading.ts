@@ -3,9 +3,7 @@ import { put } from 'redux-saga/effects';
 import { AnyAction, Reducer } from 'redux';
 import AbstractPlugin from '../lib/AbstractPlugin';
 import { IDefinitionClassesRecord, IDefinitionsRecord } from '../typings/connection';
-import {
-  IDefinitionObjectWithModule,
-} from '../typings/creator';
+import { IDefinitionObjectWithModule } from '../typings/creator';
 
 const START_LOADING = 'START_LOADING';
 const END_LOADING = 'END_LOADING';
@@ -28,6 +26,9 @@ const getLoadingPlugin = () => {
     DR extends IDefinitionsRecord<DR>,
     DC extends IDefinitionClassesRecord<DR>
   > extends AbstractPlugin<DR, DC> {
+    constructor(record: DC) {
+      super(record);
+    }
     public getReducer(): Reducer<ILoadingModuleWithGlobal<DR, DC>> {
       const creators: DC = this.creators;
       // map initial states

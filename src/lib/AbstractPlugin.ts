@@ -11,7 +11,7 @@ abstract class AbstractPlugin<DR extends IDefinitionsRecord<DR>, DC extends IDef
   /**
    * class constructor
    * @param creators {IDefinitionClassesRecord}
-   * @description Auto make creators to plugins context
+   * @description Auto add creators to plugins context
    */
   protected constructor(public creators: DC) {}
 

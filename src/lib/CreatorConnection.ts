@@ -31,8 +31,8 @@ class CreatorConnection<
    * @param options {IOptions}
    */
   constructor(options: IOptions<DR, DC, P>) {
-    this.takeType = options.defaultTakeType = takeEvery;
-    const plugins = this.makePlugins(Object.assign(options.plugins, {}), options.creators);
+    this.takeType = options.defaultTakeType || takeEvery;
+    const plugins = this.makePlugins(Object.assign(options.plugins || ({} as P), {}), options.creators);
     this.plugins = plugins.instances;
     this.combinedPluginReducers = this.combinePluginReducers(plugins.record);
     this.wrappedEffects = this.wrapEffects(options.creators);
