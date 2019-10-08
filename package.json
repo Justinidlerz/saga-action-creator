@@ -36,7 +36,7 @@
     "rollup-plugin-buble": "^0.19.6",
     "rollup-plugin-typescript2": "^0.20.1",
     "ts-jest": "^24.0.0",
-    "typescript": "^3.3.3333"
+    "typescript": "3.6.3"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
