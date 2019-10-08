@@ -83,14 +83,14 @@ const getLoadingPlugin = () => {
         return state;
       };
     }
-    public *beforeEffect(record: IDefinitionObjectWithModule): Generator<unknown, any, unknown> {
+    public *beforeEffect(record: IDefinitionObjectWithModule): Generator<any, any, any> {
       yield put({
         type: START_LOADING,
         actionName: record.name,
         moduleName: record.moduleName,
       });
     }
-    public *afterEffect(record: IDefinitionObjectWithModule): Generator<unknown, any, unknown> {
+    public *afterEffect(record: IDefinitionObjectWithModule): Generator<any, any, any> {
       yield put({
         type: END_LOADING,
         actionName: record.name,

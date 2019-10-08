@@ -1,7 +1,7 @@
 import { ForkEffect } from 'redux-saga/effects';
 
 export type ITakeType = (...args: any[]) => ForkEffect;
-export type IEffect = (...args: any[]) => Generator;
+export type IEffect = (...args: any[]) => Generator<any, any, any>;
 
 export interface IEffectItem {
   takeType: ITakeType;

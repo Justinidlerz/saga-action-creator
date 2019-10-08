@@ -31,7 +31,7 @@ abstract class AbstractPlugin<DR extends IDefinitionsRecord<DR>, DC extends IDef
    * @description Before effect running hooks,
    * You can receive the running definition record from the params
    */
-  public *beforeEffect(record: IDefinitionObjectWithModule): Generator {}
+  public *beforeEffect(record: IDefinitionObjectWithModule): Generator<any, any, any> {}
 
   /**
    * afterEffect
@@ -39,7 +39,7 @@ abstract class AbstractPlugin<DR extends IDefinitionsRecord<DR>, DC extends IDef
    * @description After effect running hooks,
    * You can receive the running definition record from the params
    */
-  public *afterEffect(record: IDefinitionObjectWithModule): Generator {}
+  public *afterEffect(record: IDefinitionObjectWithModule): Generator<any, any, any> {}
 }
 
 export default AbstractPlugin;

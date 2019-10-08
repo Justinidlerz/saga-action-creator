@@ -149,7 +149,7 @@ class CreatorConnection<
    */
   private getSagaWrapper(handle: IEffect, record: IDefinitionObjectWithModule) {
     const that = this;
-    return function*(action: IArgsAction): Generator {
+    return function*(action: IArgsAction): Generator<any, any, any> {
       try {
         yield that.callBefore(record);
         yield call(handle, ...action.args);
