@@ -1,0 +1,18 @@
+language: node_js
+node_js:
+    - '11.15.0'
+sudo: false
+
+env:
+    - CACHE_DIR=cache
+cache:
+  directories:
+    - $CACHE_DIR
+    - ~/.npm
+    - ~/.cache
+install:
+    - yarn install --no-optional --pure-lockfile > /dev/null
+script:
+    - yarn test:coverage
+after_script:
+    - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN > /dev/null
