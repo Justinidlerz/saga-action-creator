@@ -4,19 +4,23 @@
  * @description Auto create redux actions from generation functions
  */
 import { snakeCase, toUpper, uniqueId } from 'lodash';
-import { IActions, IEffectsRecord, ISagaRecord, IConstantsRecord } from '../typings/handle';
-import { ActionCreator, AnyAction } from 'redux';
+import { IDefinitions, IActions, IConstants, IDefinitionObjects, IActionCreator } from '../typings/creator';
 
-class SagaActionCreator<A extends IActions<A>> {
+class SagaActionCreator<
+  D extends IDefinitions<D>,
+  A extends IActions<D>,
+  C extends IConstants<D>,
+  DO extends IDefinitionObjects<D>
+> {
   private readonly _actions: A;
-  private readonly _constants: IConstantsRecord<A>;
-  private readonly record: IEffectsRecord<A>;
+  private readonly _constants: C;
+  private readonly record: DO;
 
   /**
    * class constructor
-   * @param definitions {ISagaRecord}
+   * @param definitions {IDefinitions}
    */
-  constructor(definitions: ISagaRecord<A>) {
+  constructor(definitions: D) {
     this.record = this.createRecord(definitions);
     this._actions = this.createActions();
     this._constants = this.mapConstants();
@@ -34,33 +38,33 @@ class SagaActionCreator<A extends IActions<A>> {
 
   /**
    * get constants
-   * @return {IConstantsRecord}
+   * @return {IConstants}
    * @description Return a created action constants record,
    * constant keys both as from the initial definitions key
    */
-  public get constants(): IConstantsRecord<A> {
+  public get constants(): C {
     return this._constants;
   }
 
   /**
    * getRecord
-   * @return {IEffectsRecord}
+   * @return {IDefinitionObjects}
    * @description Return a created record wrapped constants
    * and effect and original action key and takeType
    */
-  public getRecord(): IEffectsRecord<A> {
+  public getRecord(): DO {
     return this.record;
   }
 
   /**
    * mapConstants
-   * @return {IConstantsRecord}
+   * @return {IConstants}
    * @description Extract constants from created effect record
    */
-  private mapConstants(): IConstantsRecord<A> {
+  private mapConstants(): C {
     const constantsMap: any = {};
     for (const key of Object.keys(this.record)) {
-      const value = this.record[key as keyof A];
+      const value = this.record[key as keyof D];
       constantsMap[key] = value.actionKey;
     }
     return constantsMap;
@@ -74,8 +78,7 @@ class SagaActionCreator<A extends IActions<A>> {
   private createActions(): A {
     const actions: any = {};
     for (const key of Object.keys(this.record)) {
-      const value = this.record[key as keyof A];
-      // TODO: Add action payload params from effect.
+      const value = this.record[key as keyof D];
       actions[key] = SagaActionCreator.getAction(value.actionKey);
     }
     return actions;
@@ -83,14 +86,14 @@ class SagaActionCreator<A extends IActions<A>> {
 
   /**
    * createRecord
-   * @param definitions {ISagaRecord}
+   * @param definitions {IDefinitions}
    * @description Generate record wrapped constants
    * and effect and original action key and takeType
    */
-  private createRecord(definitions: ISagaRecord<A>): IEffectsRecord<A> {
+  private createRecord(definitions: D): DO {
     const record: any = {};
     for (const key of Object.keys(definitions)) {
-      const value = definitions[key as keyof A];
+      const value = definitions[key as keyof D];
       const actionKey = toUpper(snakeCase(`${key}_${uniqueId()}`));
       if (value instanceof Function) {
         record[key] = {
@@ -115,10 +118,10 @@ class SagaActionCreator<A extends IActions<A>> {
    * @return {ActionCreator}
    * @description Generate action creator with action name
    */
-  public static getAction(actionName: string): ActionCreator<AnyAction> {
-    return (payload?: any) => ({
+  public static getAction(actionName: string): IActionCreator<any> {
+    return (...args: any[]) => ({
       type: actionName,
-      payload,
+      args,
     });
   }
 }

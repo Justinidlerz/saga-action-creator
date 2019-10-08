@@ -1,101 +1,158 @@
-import { ReducersMapObject, AnyAction } from 'redux';
+/**
+ * CreatorConnection
+ * @author idler.zhu
+ * @description To connect the defined SagaActionCreators and plugins
+ */
 import { takeEvery, ForkEffect, call } from 'redux-saga/effects';
+import { IArgsAction, IDefinitionObject, IDefinitionObjectWithModule, IEffect, ITakeType } from '../typings/creator';
 import {
-  IEffect,
-  IEffectRecordWithModule,
-  IActionsRecord,
-  ITakeType,
-  ICreatorRecord,
-  IEffectRecord,
-  IReducers,
-} from '../typings/handle';
-import { IPlugin, IPlugins } from '../typings/plugins';
+  IOptions,
+  IPluginsInstance,
+  IReducersRecord,
+  IDefinitionsRecord,
+  IDefinitionClassesRecord,
+  IPluginDefinitions,
+  IPluginsInstanceRecord,
+} from '../typings/connection';
 
-export interface Options<A extends IActionsRecord<A>, R> {
-  // plugin list
-  plugins?: IPlugins<A, R>;
-  // default is takeEvery
-  defaultTakeType?: ITakeType;
-  creators: ICreatorRecord<A>;
-}
-
-class CreatorConnection<A extends IActionsRecord<A>, R> {
+class CreatorConnection<
+  DR extends IDefinitionsRecord<DR>,
+  DC extends IDefinitionClassesRecord<DR>,
+  P extends IPluginDefinitions<DR, DC, P>,
+  RR extends IReducersRecord<DR, DC, P>
+> {
   private readonly takeType: ITakeType;
-  private readonly combinedPluginReducers: ReducersMapObject<IReducers<A, R>>;
-  private readonly plugins: IPlugin<A, R>[];
+  private readonly plugins: IPluginsInstance<DR, DC, P>;
   private readonly wrappedEffects: ForkEffect[] = [];
+  private readonly combinedPluginReducers: RR;
 
-  constructor(options: Options<A, R>) {
+  /**
+   * class constructor
+   * @param options {IOptions}
+   */
+  constructor(options: IOptions<DR, DC, P>) {
     this.takeType = options.defaultTakeType = takeEvery;
-    this.plugins = Object.values(options.plugins || {});
-    this.combinedPluginReducers = this.combinePluginReducers(options.plugins, options.creators);
+    const plugins = this.makePlugins(Object.assign(options.plugins, {}), options.creators);
+    this.plugins = plugins.instances;
+    this.combinedPluginReducers = this.combinePluginReducers(plugins.record);
     this.wrappedEffects = this.wrapEffects(options.creators);
   }
 
-  public getReducers(): ReducersMapObject<IReducers<A, R>> {
+  /**
+   * getReducers
+   * @description Return plugins called getReducer
+   */
+  public getReducers(): RR {
     return this.combinedPluginReducers;
   }
 
-  public getEffects() {
+  /**
+   * getEffects
+   * @description Return the combined saga-effects
+   */
+  public getEffects(): ForkEffect[] {
     return this.wrappedEffects;
   }
 
-  private wrapEffects(creatorRecord: ICreatorRecord<A>): ForkEffect[] {
+  /**
+   * makePlugins
+   * @param plugins {IPluginDefinitions}
+   * @param creators {IDefinitionClassesRecord}
+   * @description Auto make plugin instance and inject the creators
+   */
+  private makePlugins(
+    plugins: P,
+    creators: DC,
+  ): {
+    record: IPluginsInstanceRecord<DR, DC, P>;
+    instances: IPluginsInstance<DR, DC, P>;
+  } {
+    const pluginsRecord: any = {};
+    const pluginInstances: any[] = [];
+    for (const key of Object.keys(plugins)) {
+      const plugin = plugins[key as keyof P];
+      const pluginInstance = new plugin(creators);
+      pluginsRecord[key] = pluginInstance;
+      pluginInstances.push(pluginInstance);
+    }
+    return {
+      record: pluginsRecord,
+      instances: pluginInstances,
+    };
+  }
+
+  /**
+   * combinePluginReducers
+   * @param plugins {IPluginsInstanceRecord}
+   * @description Combine called getReducer from plugins
+   */
+  private combinePluginReducers(plugins: IPluginsInstanceRecord<DR, DC, P>): RR {
+    return Object.keys(plugins).reduce((prev, key) => {
+      const plugin = plugins[key as keyof IPluginsInstanceRecord<DR, DC, P>];
+      return {
+        [key]: plugin.getReducer(),
+        ...prev,
+      };
+    }, {}) as any;
+  }
+
+  /**
+   * wrapEffects
+   * @param creators {IDefinitionClassesRecord}
+   * @description Create effects from the configuration
+   */
+  private wrapEffects(creators: DC): ForkEffect[] {
     const effects: ForkEffect[] = [];
-    for (const key of Object.keys(creatorRecord)) {
-      const creator = creatorRecord[key as keyof ICreatorRecord<A>];
+    for (const key of Object.keys(creators)) {
+      const creator = creators[key as keyof DC];
       const records = creator.getRecord();
-      for (const record of Object.values<IEffectRecord>(records)) {
+      for (const record of Object.values<IDefinitionObject>(records)) {
         const take = record.takeType || this.takeType;
-        effects.push(
-          take(record.actionKey, this.getSagaWrapper(record.effect, Object.assign({}, record, { moduleName: key }))),
-        );
+        const handle = this.getSagaWrapper(record.effect, Object.assign({}, record, { moduleName: key }));
+        effects.push(take(record.actionKey, handle));
       }
     }
     return effects;
   }
 
-  private *callBefore(record: IEffectRecordWithModule) {
+  /**
+   * callBefore
+   * @param record {IDefinitionObjectWithModule}
+   * @description Called before hooks from the plugins
+   */
+  private *callBefore(record: IDefinitionObjectWithModule) {
     for (const plugin of this.plugins) {
       if (plugin.beforeEffect) {
-        yield call(plugin.beforeEffect, record);
+        yield call(plugin.beforeEffect as any, record);
       }
     }
   }
 
-  private *callAfter(record: IEffectRecordWithModule) {
+  /**
+   * callAfter
+   * @param record {IDefinitionObjectWithModule}
+   * @description Called after hooks from the plugins
+   */
+  private *callAfter(record: IDefinitionObjectWithModule) {
     for (const plugin of this.plugins) {
       if (plugin.afterEffect) {
-        yield call(plugin.afterEffect, record);
+        yield call(plugin.afterEffect as any, record);
       }
     }
   }
 
-  private combinePluginReducers(
-    plugins: IPlugins<A, R> | undefined,
-    creators: ICreatorRecord<A>,
-  ): ReducersMapObject<IReducers<A, R>> {
-    if (!plugins) {
-      return {} as any;
-    }
-    return Object.keys(plugins).reduce((prev, key) => {
-      const plugin = plugins[key as keyof IPlugins<A, R>];
-      if (plugin.getReducer) {
-        return {
-          [key]: plugin.getReducer(creators),
-          ...prev,
-        };
-      }
-      return prev;
-    }, {}) as any;
-  }
-
-  private getSagaWrapper(handle: IEffect, record: IEffectRecordWithModule) {
+  /**
+   * getSagaWrapper
+   * @param handle {IEffect}
+   * @param record {IDefinitionObjectWithModule}
+   * @description Return a calling the hooks and effect function
+   */
+  private getSagaWrapper(handle: IEffect, record: IDefinitionObjectWithModule) {
     const that = this;
-    return function*(action: AnyAction): Generator {
+    return function*(action: IArgsAction): Generator {
       try {
         yield that.callBefore(record);
-        yield call(handle, action.payload);
+        yield call(handle, ...action.args);
       } finally {
         yield that.callAfter(record);
       }
