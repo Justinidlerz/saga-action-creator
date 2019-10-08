@@ -135,9 +135,9 @@ npm publish                                           # Deploy
 # TODOs
 
 - [x] Typescript generic types for plugins export reducer
-- [ ] Plugin docs
 - [x] Code remarks
-- [ ] Unit tests
+- [ ] Plugin docs
+- [x] Unit tests
 
 ## License
 
