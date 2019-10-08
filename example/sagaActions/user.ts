@@ -4,13 +4,13 @@ import createSagaActions from '../../build';
 const user = createSagaActions({
   test: {
     takeType: takeLatest,
-    *effect(payload): Iterator<any> {
-      yield console.log(payload)
-    }
+    *effect(id: number, name: string) {
+      yield console.log(id, name);
+    },
   },
-  *getUsers(payload): Iterator<any> {
-    yield console.log(payload)
-  }
+  *getUser(id: string) {},
 });
 
 export default user;
+
+// user.actions.test()

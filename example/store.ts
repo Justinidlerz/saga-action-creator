@@ -23,15 +23,11 @@ const sagaMiddleware = createSagaMiddleware();
 const store = createStore(reducers, {}, applyMiddleware(sagaMiddleware));
 
 store.subscribe(() => {
-  console.log(store.getState().loading.global);
+  console.log(store.getState().loading.user.getUser);
 });
 
 sagaMiddleware.run(function*() {
   yield all(creator.getEffects());
 });
 
-store.dispatch(
-  userSagaAction.actions.getUsers({
-    id: 123,
-  }),
-);
+store.dispatch(userSagaAction.actions.test(111,'123'));
