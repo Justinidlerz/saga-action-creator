@@ -3,8 +3,6 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: [
     "src/**/*.ts",
-    "!**/node_modules/**",
-    "!**/build/**"
   ],
   moduleFileExtensions: [
     'js',
