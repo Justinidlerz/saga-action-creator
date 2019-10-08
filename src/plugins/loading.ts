@@ -1,41 +1,38 @@
 import { cloneDeep } from 'lodash';
 import { put } from 'redux-saga/effects';
-import { Action, AnyAction, Reducer } from 'redux';
-import { IEffectRecordWithModule, IActionsRecord, ICreatorRecord, IActions } from '../typings/handle';
-import SagaActionCreator from '../lib/SagaActionCreator';
+import { AnyAction, Reducer } from 'redux';
+import AbstractPlugin from '../lib/AbstractPlugin';
+import { IDefinitionClassesRecord, IDefinitionsRecord } from '../typings/connection';
+import {
+  IDefinitionObjectWithModule,
+} from '../typings/creator';
 
 const START_LOADING = 'START_LOADING';
 const END_LOADING = 'END_LOADING';
 
-interface ILoadingAction<T extends IActionsRecord<T>> extends Action {
-  actionName: keyof SagaActionCreator<IActions<T>>['actions'];
-  moduleName: keyof T;
-}
-
-type IModuleActions<A> = {
-  [S in keyof SagaActionCreator<IActions<A>>['actions']]: boolean;
+type ILoadingModule<DR extends IDefinitionsRecord<DR>, DC extends IDefinitionClassesRecord<DR>> = {
+  [K in keyof DC]: {
+    [Key in keyof DC[K]['actions']]: boolean;
+  };
 };
 
-type ILoadingModule<S extends IActionsRecord<S>> = {
-  [K in keyof S]: IModuleActions<S[K]>;
-};
-
-type ILoadingModuleWithGlobal<T extends IActionsRecord<T>> = ILoadingModule<T> & {
+type ILoadingModuleWithGlobal<
+  DR extends IDefinitionsRecord<DR>,
+  DC extends IDefinitionClassesRecord<DR>
+> = ILoadingModule<DR, DC> & {
   global: boolean;
 };
 
 const getLoadingPlugin = () => {
-  return {
-    getReducer<A extends IActionsRecord<A>>(
-      /*
-      * TODO: The generic type has some problem
-      * let the creators parameter temporary type to any
-      * */
-      creators: any
-    ): Reducer<ILoadingModuleWithGlobal<A>, AnyAction> {
+  return class Loading<
+    DR extends IDefinitionsRecord<DR>,
+    DC extends IDefinitionClassesRecord<DR>
+  > extends AbstractPlugin<DR, DC> {
+    public getReducer(): Reducer<ILoadingModuleWithGlobal<DR, DC>> {
+      const creators: DC = this.creators;
       // map initial states
       const actions = Object.keys(creators).reduce((object, moduleName) => {
-        const module = creators[moduleName as keyof ICreatorRecord<A>];
+        const module = creators[moduleName as keyof DC];
         const actions = Object.keys(module.actions).reduce((prev, actionName) => {
           return {
             [actionName]: false,
@@ -51,26 +48,29 @@ const getLoadingPlugin = () => {
       const initState = {
         global: false,
         ...actions,
-      } as ILoadingModuleWithGlobal<A>;
+      } as ILoadingModuleWithGlobal<DR, DC>;
 
-      return (state = initState, action: AnyAction): ILoadingModuleWithGlobal<A> => {
-        let newState: ILoadingModuleWithGlobal<A>;
+      return (
+        state: ILoadingModuleWithGlobal<DR, DC> = initState,
+        action: AnyAction,
+      ): ILoadingModuleWithGlobal<DR, DC> => {
+        let newState: ILoadingModuleWithGlobal<DR, DC>;
         let module: any;
         switch (action.type) {
           case START_LOADING:
             newState = cloneDeep(state);
             newState.global = true;
-            module = newState[action.moduleName as keyof ILoadingModuleWithGlobal<A>];
+            module = newState[action.moduleName as keyof ILoadingModuleWithGlobal<DR, DC>];
             module[action.actionName] = true;
             return newState;
           case END_LOADING:
             newState = cloneDeep(state);
-            module = newState[action.moduleName as keyof ILoadingModuleWithGlobal<A>];
+            module = newState[action.moduleName as keyof ILoadingModuleWithGlobal<DR, DC>];
             module[action.actionName] = false;
             newState.global = Object.keys(newState).reduce<boolean>((prev, key) => {
               if (
                 key !== 'global' &&
-                Object.values(newState[key as keyof ILoadingModuleWithGlobal<A>]).some(
+                Object.values(newState[key as keyof ILoadingModuleWithGlobal<DR, DC>]).some(
                   isLoading => isLoading === true,
                 )
               ) {
@@ -82,21 +82,21 @@ const getLoadingPlugin = () => {
         }
         return state;
       };
-    },
-    *beforeEffect(record: IEffectRecordWithModule): Iterator<any> {
+    }
+    public *beforeEffect(record: IDefinitionObjectWithModule): Generator<unknown, any, unknown> {
       yield put({
         type: START_LOADING,
         actionName: record.name,
         moduleName: record.moduleName,
       });
-    },
-    *afterEffect(record: IEffectRecordWithModule): Iterator<any> {
+    }
+    public *afterEffect(record: IDefinitionObjectWithModule): Generator<unknown, any, unknown> {
       yield put({
         type: END_LOADING,
         actionName: record.name,
         moduleName: record.moduleName,
       });
-    },
+    }
   };
 };
 
