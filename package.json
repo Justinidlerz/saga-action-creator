@@ -26,12 +26,19 @@
     "@babel/core": "^7.0.0-0",
     "@babel/preset-env": "^7.6.0",
     "@babel/preset-typescript": "^7.6.0",
+    "@types/jest": "^24.0.18",
     "@types/lodash": "^4.14.138",
+    "@types/react": "^16.9.5",
+    "@types/react-dom": "^16.9.1",
+    "@types/react-redux": "^7.1.4",
     "babel-preset-es2015-rollup": "^3.0.0",
     "jest": "^24.5.0",
     "npm-run-all": "^4.1.5",
     "parcel": "^1.12.2",
     "prettier": "^1.18.2",
+    "react": "^16.10.2",
+    "react-dom": "^16.10.2",
+    "react-redux": "^7.1.1",
     "rollup": "^1.6.0",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-buble": "^0.19.6",
@@ -49,7 +56,6 @@
     ]
   },
   "dependencies": {
-    "@types/jest": "^24.0.18",
     "lodash": "^4.17.15",
     "redux": "^4.0.4",
     "redux-saga": "^1.0.5"
