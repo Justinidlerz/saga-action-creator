@@ -1,33 +1,20 @@
-import '@babel/polyfill';
-import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import { all } from 'redux-saga/effects';
-import { createConnection, getLoadingPlugin } from '../build';
-import userSagaAction from './sagaActions/user';
-
-const creator = createConnection({
-  creators: {
-    user: userSagaAction,
-  },
-  plugins: {
-    loading: getLoadingPlugin(),
-  },
-});
+import creator from './sagas';
 
 const reducers = combineReducers({
   ...creator.getReducers(),
 });
 
+export type AppState = ReturnType<typeof reducers>;
+
 const sagaMiddleware = createSagaMiddleware();
 
-const store = createStore(reducers, {}, applyMiddleware(sagaMiddleware));
+const composeEnhancer = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
-store.subscribe(() => {
-  console.log(store.getState().loading.user.getUser);
-});
+export default createStore(reducers, {}, composeEnhancer(applyMiddleware(sagaMiddleware)));
 
 sagaMiddleware.run(function*() {
   yield all(creator.getEffects());
 });
-
-store.dispatch(userSagaAction.actions.test(111,'123'));
