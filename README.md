@@ -2,64 +2,103 @@
 
 [![npm version](https://badge.fury.io/js/saga-action-creator.svg)](https://badge.fury.io/js/saga-action-creator)
 [![codecov](https://codecov.io/gh/Justinidlerz/saga-action-creator/branch/master/graph/badge.svg)](https://codecov.io/gh/Justinidlerz/saga-action-creator)
-[![Build Status](https://travis-ci.org/codecov/example-typescript.svg?branch=master)](https://travis-ci.org/gh/Justinidlerz/saga-action-creator)
+[![npm](https://img.shields.io/npm/dm/saga-action-creator.svg)](https://www.npmjs.com/package/saga-action-creator)
+[![Build Status](https://travis-ci.org/Justinidlerz/saga-action-creator.svg?branch=master)](https://travis-ci.org/Justinidlerz/saga-action-creator)
 [![TypeScript](https://img.shields.io/badge/%3C/%3E-TypeScript-0072C4.svg)](https://www.typescriptlang.org/)
 [![Tested with Jest](https://img.shields.io/badge/tested_with-Jest-99424f.svg)](https://github.com/facebook/jest)
 [![MIT License](https://img.shields.io/npm/l/generator-bxd-oss.svg)](#License)
 
-# Usage
+The `Saga-action-creator` is made to simplify the writing of [`Redux-saga`](https://github.com/redux-saga/redux-saga), it can auto-generate `Action Creators` for dispatch from your writes Saga effects directly.
 
-### Create saga actions
+This toolkit supports plugins and It can help to make some actions before and after effect convenient, which means it will be much simpler to set up the loading state, handle the error, etc. when you executing the asynchronous effect.
 
-- Define the sagas
+Adds automated loading indicators for effects to `Saga-action-creator`. Inspired by [`Rematch`](https://github.com/rematch/rematch).
+
+Why we still need this toolkit when we have [`rematch`](https://github.com/rematch/rematch) already? That is because the cost of migration from Redux's historical project to Rematch is high, and Redux-Saga has many excellent designs (i.e: such as take, fork, channel, etc.).
+
+# Features
+
+- Auto-generate actions from passed effect
+- Completely retain redux-saga features
+- Support plugins
+- Typescript-typings support (including plugins)
+- Testable
+
+# Getting started
+
+## Install
+
+```sh
+$ npm install --save saga-action-creator
+```
+
+or
+
+```sh
+$ yarn add saga-action-creator
+```
+
+## Usage Example
+
+#### Step 1: Define saga effects
 
 ```typescript
 import createSagaActions from 'saga-action-creator';
 import { takeLatest, call } from 'redux-saga/effects';
-import userServices from '../services/user';
+import { getUserInfo, updateUser } from '../services/user';
 
 const user = createSagaActions({
+  // By default, you can pass the generator functions
+  *getUserById(id: string): Generator<any, any, any> {
+    yield call(getUserInfo, id);
+  },
   // If you need to change the effect take type
   // you can pass the object for the action name
-  test: {
+  updateUser: {
     takeType: takeLatest,
-    *effect(payload): Iterator<any> {
-      yield console.log(payload);
+    *effect(id: string, name: string): Generator<any, any, any> {
+      yield call(updateUser, id, { name });
     },
-  },
-  *getUserInfo(): Iterator<any> {
-    return yield call(userServices.getUserInfo);
-  },
-  // by default, you can pass the generator function for the action
-  *getUsers(payload): Iterator<any> {
-    yield console.log(payload);
   },
 });
 
 export default user;
 ```
 
-- Connect sagaActions and use the plugin
+#### Step 2: Connect sagaActions
 
 ```typescript
 import { createConnection, getLoadingPlugin } from 'saga-action-creator';
-import { createStore, combineReducers, applyMiddleware } from 'redux';
-import { all, takeEvery } from 'redux-saga/effects';
-import createSagaMiddleware from 'redux-saga';
-import user from './sagaActions/user';
+import user from './user';
+import { takeLatest } from 'redux-saga/effects';
 
-// combine creators an use plugin
 const creator = createConnection({
+  // Combine creators
   creators: {
     user,
   },
-  // you can change the default take type here, by default is `takeEvery`
-  defaultTakeType: takeEvery,
+  // You can change the default take type here,
+  // by default is `takeEvery`
+  defaultTakeType: takeLatest,
+  // You can pass plugins at there
   plugins: {
     // the plugin name will be map to reducer key
     loading: getLoadingPlugin(),
   },
 });
+
+export default creator;
+```
+
+For a more advanced setup, see [plugins]() and [Redux-saga](https://redux-saga.js.org/docs/api/)
+
+#### Step 3: Connect to redux and redux-saga
+
+```typescript
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { all } from 'redux-saga/effects';
+import createSagaMiddleware from 'redux-saga';
+import creator from '../sagas';
 
 // connect to store
 const reducers = combineReducers({
@@ -67,29 +106,33 @@ const reducers = combineReducers({
 });
 
 const sagaMiddleware = createSagaMiddleware();
-// connect to saga
+
+// connect to saga and run
 sagaMiddleware.run(function*() {
   yield all(creator.getEffects());
 });
 
-const store = createStore(reducers, {}, applyMiddleware(sagaMiddleware));
+const store = createStore(reducers, applyMiddleware(sagaMiddleware));
+
+export type AppState = ReturnType<typeof reducers>;
 
 export default store;
 ```
 
-- Use created actions
+#### Step 3: Use created actions
 
 ```typescript
 import { connect } from 'react-redux';
+import { AppState } from '../store';
 import userActions from '../sagaActions/user';
 import UserList from './UserList';
 
-const mapStateToProps = state => ({
-  loading: state.loading.user.getUsers,
+const mapStateToProps = (state: AppState) => ({
+  loading: state.loading.user.getUserById,
 });
 
 const mapDispatchToProps = {
-  getUsers: userActions.actions.getUsers,
+  getUserById: userActions.actions.getUserById,
 };
 
 export default connect(
@@ -98,46 +141,24 @@ export default connect(
 )(UserList);
 ```
 
-- Use constants
-  > If you need to take to wait for another effect you can use it.  
-  > Don't use to create actions.
+# Examples
 
-```typescript
-import createSagaActions from 'saga-action-creator';
-import user from './sagaActions/user';
-import { take, call } from 'redux-saga/effects';
-import orderServices from '../serivces/order';
-
-function* waitForUser() {
-  while (true) {
-    return yield take(user.constants.getUserInfo);
-  }
-}
-
-const order = createSagaActions({
-  *getOrders(): Iterator<any> {
-    const user = yield call(waitForUser);
-    yield call(orderServices.getOrders);
-  },
-});
-
-export default order;
-```
-
-# Development
-
-```javascript
-npm start                                             # Develop
-npm run test                                          # Test
-npm publish                                           # Deploy
-```
+- [Todos]()
 
 # TODOs
 
 - [x] Typescript generic types for plugins export reducer
 - [x] Code remarks
-- [ ] Plugin docs
 - [x] Unit tests
+- [x] Local example
+- [ ] Plugin docs
+- [ ] Online examples
+- [ ] API docs
+- [ ] Chinese docs
+
+# API
+
+See the [APIs]()
 
 ## License
 
