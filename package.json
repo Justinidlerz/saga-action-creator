@@ -41,7 +41,6 @@
     "react-redux": "^7.1.1",
     "rollup": "^1.6.0",
     "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-buble": "^0.19.6",
     "rollup-plugin-typescript2": "^0.20.1",
     "ts-jest": "^24.0.0",
     "typescript": "3.6.3"
