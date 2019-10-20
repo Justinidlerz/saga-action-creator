@@ -21,10 +21,10 @@ class CreatorConnection<
   P extends IPluginDefinitions<DR, DC, P>,
   RR extends IReducersRecord<DR, DC, P>
 > {
-  private readonly takeType: ITakeType;
-  private readonly plugins: IPluginsInstance<DR, DC, P>;
-  private readonly wrappedEffects: ForkEffect[] = [];
-  private readonly combinedPluginReducers: RR;
+  protected readonly takeType: ITakeType;
+  protected readonly plugins: IPluginsInstance<DR, DC, P>;
+  protected readonly wrappedEffects: ForkEffect[] = [];
+  protected readonly combinedPluginReducers: RR;
 
   /**
    * class constructor
@@ -60,7 +60,7 @@ class CreatorConnection<
    * @param creators {IDefinitionClassesRecord}
    * @description Auto make plugin instance and inject the creators
    */
-  private makePlugins(
+  protected makePlugins(
     plugins: P,
     creators: DC,
   ): {
@@ -86,7 +86,7 @@ class CreatorConnection<
    * @param plugins {IPluginsInstanceRecord}
    * @description Combine called getReducer from plugins
    */
-  private combinePluginReducers(plugins: IPluginsInstanceRecord<DR, DC, P>): RR {
+  protected combinePluginReducers(plugins: IPluginsInstanceRecord<DR, DC, P>): RR {
     return Object.keys(plugins).reduce((prev, key) => {
       const plugin = plugins[key as keyof IPluginsInstanceRecord<DR, DC, P>];
       return {
@@ -101,7 +101,7 @@ class CreatorConnection<
    * @param creators {IDefinitionClassesRecord}
    * @description Create effects from the configuration
    */
-  private wrapEffects(creators: DC): ForkEffect[] {
+  protected wrapEffects(creators: DC): ForkEffect[] {
     const effects: ForkEffect[] = [];
     for (const key of Object.keys(creators)) {
       const creator = creators[key as keyof DC];
@@ -120,7 +120,7 @@ class CreatorConnection<
    * @param record {IDefinitionObjectWithModule}
    * @description Called before hooks from the plugins
    */
-  private *callBefore(record: IDefinitionObjectWithModule) {
+  protected *callBefore(record: IDefinitionObjectWithModule) {
     for (const plugin of this.plugins) {
       if (plugin.beforeEffect) {
         yield call(plugin.beforeEffect as any, record);
@@ -133,7 +133,7 @@ class CreatorConnection<
    * @param record {IDefinitionObjectWithModule}
    * @description Called after hooks from the plugins
    */
-  private *callAfter(record: IDefinitionObjectWithModule) {
+  protected *callAfter(record: IDefinitionObjectWithModule) {
     for (const plugin of this.plugins) {
       if (plugin.afterEffect) {
         yield call(plugin.afterEffect as any, record);
@@ -147,7 +147,7 @@ class CreatorConnection<
    * @param record {IDefinitionObjectWithModule}
    * @description Return a calling the hooks and effect function
    */
-  private getSagaWrapper(handle: IEffect, record: IDefinitionObjectWithModule) {
+  protected getSagaWrapper(handle: IEffect, record: IDefinitionObjectWithModule) {
     const that = this;
     return function*(action: IArgsAction): Generator<any, any, any> {
       try {

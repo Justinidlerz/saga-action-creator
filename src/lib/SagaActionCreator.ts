@@ -12,9 +12,9 @@ class SagaActionCreator<
   C extends IConstants<D>,
   DO extends IDefinitionObjects<D>
 > {
-  private readonly _actions: A;
-  private readonly _constants: C;
-  private readonly record: DO;
+  protected readonly _actions: A;
+  protected readonly _constants: C;
+  protected readonly record: DO;
 
   /**
    * class constructor
@@ -61,7 +61,7 @@ class SagaActionCreator<
    * @return {IConstants}
    * @description Extract constants from created effect record
    */
-  private mapConstants(): C {
+  protected mapConstants(): C {
     const constantsMap: any = {};
     for (const key of Object.keys(this.record)) {
       const value = this.record[key as keyof D];
@@ -75,7 +75,7 @@ class SagaActionCreator<
    * @return {IActions}
    * @description Generate actions from create effect record
    */
-  private createActions(): A {
+  protected createActions(): A {
     const actions: any = {};
     for (const key of Object.keys(this.record)) {
       const value = this.record[key as keyof D];
@@ -90,7 +90,7 @@ class SagaActionCreator<
    * @description Generate record wrapped constants
    * and effect and original action key and takeType
    */
-  private createRecord(definitions: D): DO {
+  protected createRecord(definitions: D): DO {
     const record: any = {};
     for (const key of Object.keys(definitions)) {
       const value = definitions[key as keyof D];
