@@ -1,4 +1,4 @@
-import { createConnection, getLoadingPlugin } from '../../build';
+import { createConnection, getLoadingPlugin, getErrorHandlePlugin } from '../../build';
 import userSagaAction from './user';
 import { takeEvery } from 'redux-saga/effects';
 
@@ -8,6 +8,9 @@ const creator = createConnection({
     user: userSagaAction,
   },
   plugins: {
+    error: getErrorHandlePlugin((error, details) => {
+      console.log(error, details);
+    }),
     loading: getLoadingPlugin(),
   },
 });

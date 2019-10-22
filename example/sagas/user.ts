@@ -13,6 +13,9 @@ const user = createSagaActions({
   *getUserById(id: string) {
     yield call(getUserById, id);
   },
+  *throwError() {
+    throw new Error('Test error');
+  }
 });
 
 export default user;

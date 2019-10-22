@@ -3,8 +3,10 @@ import createSagaMiddleware from 'redux-saga';
 import { all } from 'redux-saga/effects';
 import creator from './sagas';
 
+const reducersRecord = creator.getReducers();
+
 const reducers = combineReducers({
-  ...creator.getReducers(),
+  loading: reducersRecord.loading,
 });
 
 export type AppState = ReturnType<typeof reducers>;
