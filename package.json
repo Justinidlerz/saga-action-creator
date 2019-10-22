@@ -1,6 +1,6 @@
 {
   "name": "saga-action-creator",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "A toolkit to auto generate actions for the redux-saga.",
   "repository": "https://github.com/Justinidlerz/saga-action-creator",
   "bugs": "https://github.com/Justinidlerz/saga-action-creator/issues",
