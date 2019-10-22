@@ -3,17 +3,19 @@
  * @author idler.zhu
  * @description Abstract plugin classes for write plugins to extends
  */
-import { IDefinitionClassesRecord, IDefinitionsRecord } from '../typings/connection';
-import { IDefinitionObjectWithModule } from '../typings/creator';
+import { IDefinitionClassesRecord, IDefinitionObjectWithModule, IDefinitionsRecord } from '..';
 import { Reducer } from 'redux';
 
-abstract class AbstractPlugin<DR extends IDefinitionsRecord<DR>, DC extends IDefinitionClassesRecord<DR>> {
+class AbstractPlugin<DR extends IDefinitionsRecord<DR>, DC extends IDefinitionClassesRecord<DR>> {
+  public creators: DC;
   /**
    * class constructor
    * @param creators {IDefinitionClassesRecord}
    * @description Auto add creators to plugins context
    */
-  protected constructor(public creators: DC) {}
+  constructor(creators: DC) {
+    this.creators = creators;
+  }
 
   /**
    * getReducer
@@ -36,10 +38,24 @@ abstract class AbstractPlugin<DR extends IDefinitionsRecord<DR>, DC extends IDef
   /**
    * afterEffect
    * @param record {IDefinitionObjectWithModule}
+   * @param effectValue {any}
    * @description After effect running hooks,
    * You can receive the running definition record from the params
    */
-  public *afterEffect(record: IDefinitionObjectWithModule): Generator<any, any, any> {}
+  public *afterEffect(record: IDefinitionObjectWithModule, effectValue?: any): Generator<any, any, any> {}
+
+  /**
+   * errorHandle
+   * @param error {Error}
+   * @param record {IDefinitionObjectWithModule}
+   * @return {Generator<any, boolean, any>}
+   * @description Catch the effects thrown errors
+   * If you are implemented the errorCatcher hooks,
+   * You should return true to told we should not continue throw error
+   */
+  public *errorHandle(error: Error, record: IDefinitionObjectWithModule): Generator<any, boolean, any> {
+    return false;
+  }
 }
 
 export default AbstractPlugin;
