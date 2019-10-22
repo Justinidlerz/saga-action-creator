@@ -11,6 +11,7 @@ import CreatorConnection from './lib/CreatorConnection';
 import AbstractPlugin from './lib/AbstractPlugin';
 
 import getLoadingPlugin from './plugins/loading';
+import getErrorHandlePlugin from './plugins/errorHandle';
 export * from './typings/connection';
 export * from './typings/creator';
 
@@ -32,5 +33,12 @@ const createConnection = <
   options: IOptions<DR, DC, P>,
 ) => new CreatorConnection<DR, DC, P, RR>(options);
 
-export { createConnection, getLoadingPlugin, AbstractPlugin, SagaActionCreator, CreatorConnection };
+export {
+  createConnection,
+  getLoadingPlugin,
+  AbstractPlugin,
+  SagaActionCreator,
+  CreatorConnection,
+  getErrorHandlePlugin,
+};
 export default createSagaActions;

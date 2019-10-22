@@ -15,15 +15,35 @@ class SagaActionCreator<
   protected readonly _actions: A;
   protected readonly _constants: C;
   protected readonly record: DO;
-
+  protected _connectedEffects: D = {} as D;
+  protected _originEffects: D;
   /**
    * class constructor
    * @param definitions {IDefinitions}
    */
   constructor(definitions: D) {
+    this._originEffects = definitions;
     this.record = this.createRecord(definitions);
     this._actions = this.createActions();
     this._constants = this.mapConstants();
+  }
+
+  /**
+   * get connectedEffects
+   * @return {IDefinitions}
+   * @description Return the effects wrapped from the connection
+   */
+  public get connectedEffects(): D {
+    return this._connectedEffects;
+  }
+
+  /**
+   * get effects
+   * @return {IDefinitions}
+   * @description Return the effects wrapped from the connection
+   */
+  public get effects(): D {
+    return this._originEffects;
   }
 
   /**
@@ -54,6 +74,15 @@ class SagaActionCreator<
    */
   public getRecord(): DO {
     return this.record;
+  }
+
+  /**
+   * setWrappedEffects
+   * @param effects {IDefinitions}
+   * @description Set the connected effects from the connection
+   */
+  public setWrappedEffects(effects: D) {
+    this._connectedEffects = effects;
   }
 
   /**

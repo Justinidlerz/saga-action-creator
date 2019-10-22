@@ -106,11 +106,15 @@ class CreatorConnection<
     for (const key of Object.keys(creators)) {
       const creator = creators[key as keyof DC];
       const records = creator.getRecord();
+      const wrappedEffect: any = {};
       for (const record of Object.values<IDefinitionObject>(records)) {
         const take = record.takeType || this.takeType;
         const handle = this.getSagaWrapper(record.effect, Object.assign({}, record, { moduleName: key }));
+        wrappedEffect[record.name] = this.makeWrappedEffect(handle);
         effects.push(take(record.actionKey, handle));
       }
+      // Rewrite the wrapped effect to the creator
+      creator.setWrappedEffects(wrappedEffect);
     }
     return effects;
   }
@@ -122,22 +126,42 @@ class CreatorConnection<
    */
   protected *callBefore(record: IDefinitionObjectWithModule) {
     for (const plugin of this.plugins) {
-      if (plugin.beforeEffect) {
-        yield call(plugin.beforeEffect as any, record);
-      }
+      yield call(plugin.beforeEffect as any, record);
     }
   }
 
   /**
    * callAfter
    * @param record {IDefinitionObjectWithModule}
+   * @param effectValue {any}
    * @description Called after hooks from the plugins
    */
-  protected *callAfter(record: IDefinitionObjectWithModule) {
+  protected *callAfter(record: IDefinitionObjectWithModule, effectValue: any) {
     for (const plugin of this.plugins) {
-      if (plugin.afterEffect) {
-        yield call(plugin.afterEffect as any, record);
+      yield call(plugin.afterEffect as any, record, effectValue);
+    }
+  }
+
+  /**
+   * errorHandling
+   * @param record {IDefinitionObjectWithModule}
+   * @param error {Error}
+   * @description Called error handling from the plugins
+   */
+  protected *errorHandling(record: IDefinitionObjectWithModule, error: Error) {
+    let isHandedError = false;
+    for (const plugin of this.plugins) {
+      const handed = yield call(plugin.errorHandle, error, record);
+      if (handed) {
+        isHandedError = true;
       }
+    }
+    if (!isHandedError) {
+      error.message = `[Saga-action-creator] Unhandled error:
+      It seems to have some hidden danger for your App
+      Can use the errorHandler plugin.
+      ${error.message}`;
+      throw error;
     }
   }
 
@@ -150,12 +174,25 @@ class CreatorConnection<
   protected getSagaWrapper(handle: IEffect, record: IDefinitionObjectWithModule) {
     const that = this;
     return function*(action: IArgsAction): Generator<any, any, any> {
+      let effectValue: any;
       try {
         yield that.callBefore(record);
-        yield call(handle, ...action.args);
+        effectValue = yield call(handle, ...action.args);
+      } catch (e) {
+        yield that.errorHandling(record, e);
       } finally {
-        yield that.callAfter(record);
+        yield that.callAfter(record, effectValue);
       }
+    };
+  }
+
+  /**
+   * makeWrappedEffect
+   * @param wrappedSaga {}
+   */
+  protected makeWrappedEffect(wrappedSaga: (action: IArgsAction) => Generator<any, any, any>) {
+    return function*(...args: any[]): Generator<any, any, any> {
+      return wrappedSaga({ type: '', args });
     };
   }
 }
