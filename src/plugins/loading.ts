@@ -26,9 +26,6 @@ const getLoadingPlugin = () => {
     DR extends IDefinitionsRecord<DR>,
     DC extends IDefinitionClassesRecord<DR>
   > extends AbstractPlugin<DR, DC> {
-    constructor(record: DC) {
-      super(record);
-    }
     public getReducer(): Reducer<ILoadingModuleWithGlobal<DR, DC>> {
       const creators: DC = this.creators;
       // map initial states
