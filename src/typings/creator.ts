@@ -31,6 +31,10 @@ export type IActions<D extends IDefinitions<D>> = {
 
 export type IDefinitions<D> = Record<keyof D, IDefinition>;
 
+export type IFlattenDefinitions<D extends IDefinitions<D>> = {
+  [K in keyof D]: D[K] extends IEffect ? D[K] : D[K] extends IEffectItem ? D[K]['effect'] : never;
+};
+
 export type IConstants<D extends IDefinitions<D>> = Record<keyof D, string>;
 
 export interface IDefinitionObject {

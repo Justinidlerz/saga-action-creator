@@ -15,7 +15,7 @@ const user = createSagaActions({
   },
   *throwError() {
     throw new Error('Test error');
-  }
+  },
 });
 
 export default user;

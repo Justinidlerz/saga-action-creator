@@ -4,7 +4,14 @@
  * @description Auto create redux actions from generation functions
  */
 import { snakeCase, toUpper, uniqueId } from 'lodash';
-import { IDefinitions, IActions, IConstants, IDefinitionObjects, IActionCreator } from '../typings/creator';
+import {
+  IDefinitions,
+  IActions,
+  IConstants,
+  IDefinitionObjects,
+  IActionCreator,
+  IFlattenDefinitions,
+} from '../typings/creator';
 
 class SagaActionCreator<
   D extends IDefinitions<D>,
@@ -15,14 +22,14 @@ class SagaActionCreator<
   protected readonly _actions: A;
   protected readonly _constants: C;
   protected readonly record: DO;
-  protected _connectedEffects: D = {} as D;
-  protected _originEffects: D;
+  protected _connectedEffects: IFlattenDefinitions<D> = {} as any;
+  protected _originEffects: IFlattenDefinitions<D>;
   /**
    * class constructor
    * @param definitions {IDefinitions}
    */
   constructor(definitions: D) {
-    this._originEffects = definitions;
+    this._originEffects = this.getFlattenEffects(definitions);
     this.record = this.createRecord(definitions);
     this._actions = this.createActions();
     this._constants = this.mapConstants();
@@ -33,7 +40,7 @@ class SagaActionCreator<
    * @return {IDefinitions}
    * @description Return the effects wrapped from the connection
    */
-  public get connectedEffects(): D {
+  public get connectedEffects(): IFlattenDefinitions<D> {
     return this._connectedEffects;
   }
 
@@ -42,7 +49,7 @@ class SagaActionCreator<
    * @return {IDefinitions}
    * @description Return the effects wrapped from the connection
    */
-  public get effects(): D {
+  public get effects(): IFlattenDefinitions<D> {
     return this._originEffects;
   }
 
@@ -81,7 +88,7 @@ class SagaActionCreator<
    * @param effects {IDefinitions}
    * @description Set the connected effects from the connection
    */
-  public setWrappedEffects(effects: D) {
+  public setWrappedEffects(effects: IFlattenDefinitions<D>) {
     this._connectedEffects = effects;
   }
 
@@ -111,6 +118,19 @@ class SagaActionCreator<
       actions[key] = SagaActionCreator.getAction(value.actionKey);
     }
     return actions;
+  }
+
+  protected getFlattenEffects(definitions: D): IFlattenDefinitions<D> {
+    const record: any = {};
+    for (const key of Object.keys(definitions)) {
+      const value = definitions[key as keyof D];
+      if (value instanceof Function) {
+        record[key] = value;
+      } else {
+        record[key] = (value as any).effect;
+      }
+    }
+    return record;
   }
 
   /**
