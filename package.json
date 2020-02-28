@@ -45,6 +45,7 @@
     "ts-jest": "^25.2.1",
     "typescript": "^3.8.2"
   },
+  "publishConfig": { "registry": "https://npm.pkg.github.com/" },
   "gitHooks": {
     "pre-commit": "lint-staged"
   },
