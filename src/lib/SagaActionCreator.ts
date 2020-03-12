@@ -22,7 +22,7 @@ class SagaActionCreator<
   protected readonly _actions: A;
   protected readonly _constants: C;
   protected readonly record: DO;
-  protected _connectedEffects: IFlattenDefinitions<D> = {} as any;
+  protected _connectedEffects: IFlattenDefinitions<D>;
   protected _originEffects: IFlattenDefinitions<D>;
   /**
    * class constructor
@@ -30,6 +30,9 @@ class SagaActionCreator<
    */
   constructor(definitions: D) {
     this._originEffects = this.getFlattenEffects(definitions);
+    // set the original effect for it by default
+    // the actual effect is set from the connection
+    this._connectedEffects = this._originEffects;
     this.record = this.createRecord(definitions);
     this._actions = this.createActions();
     this._constants = this.mapConstants();
