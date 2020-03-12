@@ -192,7 +192,7 @@ class CreatorConnection<
    */
   protected makeWrappedEffect(wrappedSaga: (action: IArgsAction) => Generator<any, any, any>) {
     return function*(...args: any[]): Generator<any, any, any> {
-      return wrappedSaga({ type: '', args });
+      return yield wrappedSaga({ type: '', args });
     };
   }
 }
