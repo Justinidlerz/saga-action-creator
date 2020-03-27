@@ -47,5 +47,5 @@ export interface IOptions<
 }
 
 export interface IGetSagaWrapperOptions {
-  withoutErrorHandle: boolean;
+  withoutErrorHandling?: boolean;
 }

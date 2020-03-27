@@ -13,7 +13,7 @@ import {
   IDefinitionClassesRecord,
   IPluginDefinitions,
   IPluginsInstanceRecord,
-  IGetSagaWrapperOptions
+  IGetSagaWrapperOptions,
 } from '../typings/connection';
 
 class CreatorConnection<
@@ -111,7 +111,11 @@ class CreatorConnection<
       for (const record of Object.values<IDefinitionObject>(records)) {
         const take = record.takeType || this.takeType;
         const handle = this.getSagaWrapper(record.effect, Object.assign({}, record, { moduleName: key }));
-        const handleForWrappedEffect = this.getSagaWrapper(record.effect, Object.assign({}, record, { moduleName: key }), { withoutErrorHandle: true });
+        const handleForWrappedEffect = this.getSagaWrapper(
+          record.effect,
+          Object.assign({}, record, { moduleName: key }),
+          { withoutErrorHandling: true },
+        );
         wrappedEffect[record.name] = this.makeWrappedEffect(handleForWrappedEffect);
         effects.push(take(record.actionKey, handle));
       }
@@ -176,13 +180,13 @@ class CreatorConnection<
    */
   protected getSagaWrapper(handle: IEffect, record: IDefinitionObjectWithModule, options?: IGetSagaWrapperOptions) {
     const that = this;
-    return function*(action: IArgsAction): Generator<any, any, any> {
+    return function* (action: IArgsAction): Generator<any, any, any> {
       let effectValue: any;
       try {
         yield that.callBefore(record);
         effectValue = yield call(handle, ...action.args);
       } catch (e) {
-        if (!options?.withoutErrorHandle) {
+        if (!options?.withoutErrorHandling) {
           yield that.errorHandling(record, e);
         }
       } finally {
@@ -196,7 +200,7 @@ class CreatorConnection<
    * @param wrappedSaga {}
    */
   protected makeWrappedEffect(wrappedSaga: (action: IArgsAction) => Generator<any, any, any>) {
-    return function*(...args: any[]): Generator<any, any, any> {
+    return function* (...args: any[]): Generator<any, any, any> {
       return yield wrappedSaga({ type: '', args });
     };
   }
