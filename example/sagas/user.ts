@@ -1,7 +1,8 @@
-import { call, takeLatest } from 'redux-saga/effects';
+import { call, takeLatest, all } from 'redux-saga/effects';
 
 import createSagaActions from '../../build';
 import { getUserById, updateUser } from '../services/user';
+import article from './article';
 
 const user = createSagaActions({
   updateUser: {
@@ -12,6 +13,12 @@ const user = createSagaActions({
   },
   *getUserById(id: string) {
     yield call(getUserById, id);
+  },
+  *callWithArticle(): Generator<any, any, any> {
+    yield all([
+      call(article.connectedEffects.throwError),
+      call(article.connectedEffects.updateArticle),
+    ])
   },
   *throwError() {
     throw new Error('Test error');
