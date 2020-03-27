@@ -45,3 +45,7 @@ export interface IOptions<
   plugins?: P;
   defaultTakeType?: ITakeType;
 }
+
+export interface IGetSagaWrapperOptions {
+  withoutErrorHandle: boolean;
+}

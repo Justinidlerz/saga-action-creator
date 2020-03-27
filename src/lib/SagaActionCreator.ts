@@ -50,7 +50,7 @@ class SagaActionCreator<
   /**
    * get effects
    * @return {IDefinitions}
-   * @description Return the effects wrapped from the connection
+   * @description Return the effects passed by definition
    */
   public get effects(): IFlattenDefinitions<D> {
     return this._originEffects;

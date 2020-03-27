@@ -13,6 +13,7 @@ import {
   IDefinitionClassesRecord,
   IPluginDefinitions,
   IPluginsInstanceRecord,
+  IGetSagaWrapperOptions
 } from '../typings/connection';
 
 class CreatorConnection<
@@ -110,7 +111,8 @@ class CreatorConnection<
       for (const record of Object.values<IDefinitionObject>(records)) {
         const take = record.takeType || this.takeType;
         const handle = this.getSagaWrapper(record.effect, Object.assign({}, record, { moduleName: key }));
-        wrappedEffect[record.name] = this.makeWrappedEffect(handle);
+        const handleForWrappedEffect = this.getSagaWrapper(record.effect, Object.assign({}, record, { moduleName: key }), { withoutErrorHandle: true });
+        wrappedEffect[record.name] = this.makeWrappedEffect(handleForWrappedEffect);
         effects.push(take(record.actionKey, handle));
       }
       // Rewrite the wrapped effect to the creator
@@ -169,9 +171,10 @@ class CreatorConnection<
    * getSagaWrapper
    * @param handle {IEffect}
    * @param record {IDefinitionObjectWithModule}
+   * @param options {IGetSagaWrapperOptions}
    * @description Return a calling the hooks and effect function
    */
-  protected getSagaWrapper(handle: IEffect, record: IDefinitionObjectWithModule) {
+  protected getSagaWrapper(handle: IEffect, record: IDefinitionObjectWithModule, options?: IGetSagaWrapperOptions) {
     const that = this;
     return function*(action: IArgsAction): Generator<any, any, any> {
       let effectValue: any;
@@ -179,7 +182,9 @@ class CreatorConnection<
         yield that.callBefore(record);
         effectValue = yield call(handle, ...action.args);
       } catch (e) {
-        yield that.errorHandling(record, e);
+        if (!options?.withoutErrorHandle) {
+          yield that.errorHandling(record, e);
+        }
       } finally {
         yield that.callAfter(record, effectValue);
       }
