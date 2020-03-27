@@ -8,7 +8,7 @@ const creator = createConnection({
     user: userSagaAction,
   },
   plugins: {
-    error: getErrorHandlePlugin((error, details) => {
+    error: getErrorHandlePlugin(function* (error, details) {
       console.log(error, details);
     }),
     loading: getLoadingPlugin(),
