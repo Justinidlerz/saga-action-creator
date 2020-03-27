@@ -188,6 +188,8 @@ class CreatorConnection<
       } catch (e) {
         if (!options?.withoutErrorHandling) {
           yield that.errorHandling(record, e);
+        } else {
+          throw e;
         }
       } finally {
         yield that.callAfter(record, effectValue);
