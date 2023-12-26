@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash';
+import cloneDeep from 'lodash/cloneDeep';
 import { put } from 'redux-saga/effects';
 import { AnyAction, Reducer } from 'redux';
 import AbstractPlugin from '../lib/AbstractPlugin';

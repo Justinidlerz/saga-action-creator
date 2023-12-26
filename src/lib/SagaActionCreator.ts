@@ -3,7 +3,9 @@
  * @author idler.zhu
  * @description Auto create redux actions from generation functions
  */
-import { snakeCase, toUpper, uniqueId } from 'lodash';
+import snakeCase from 'lodash/snakeCase';
+import toUpper from 'lodash/toUpper';
+import uniqueId from 'lodash/uniqueId';
 import {
   IDefinitions,
   IActions,
