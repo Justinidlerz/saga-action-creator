@@ -193,6 +193,7 @@ class CreatorConnection<
         }
       } finally {
         yield that.callAfter(record, effectValue);
+        return effectValue
       }
     };
   }
